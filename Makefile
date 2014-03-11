@@ -1,10 +1,12 @@
 LANGS=pl en
+TRANSLATE=../translate/
 DEFINES_FILE=../libenv/includes/site_strings.h
-INPUT_FILE=../platforms/site_strings.txt
+INPUT_FILE=$(TRANSLATE)site_strings.txt
+POT_FILE=$(TRANSLATE)site_strings.pot
 CLIENT_FILES=../httpd/www/code/lang/
 LOCALES_DIR=../httpd/data/locales
 EXPORTS=client.strings
-EXPORT_INPUT=../platforms/$(EXPORTS)
+EXPORT_INPUT=$(TRANSLATE)$(EXPORTS)
 CPS_IN= \
 	iso-8859-1 \
 	iso-8859-2 \
@@ -58,8 +60,8 @@ CP=cp -f
 RM=rm -f
 
 SAVE_LANGS = $(subst -,_,$(LANGS))
-POS = $(addsuffix /site_strings.po,$(SAVE_LANGS))
-MOS = $(addsuffix /site_strings.mo,$(SAVE_LANGS))
+POS = $(addprefix $(TRANSLATE), $(addsuffix /site_strings.po,$(SAVE_LANGS)))
+MOS = $(addprefix $(TRANSLATE), $(addsuffix /site_strings.mo,$(SAVE_LANGS)))
 LNGS = $(addprefix $(LOCALES_DIR)/, $(addsuffix /site_strings.lng,$(SAVE_LANGS)))
 EXPORTED = $(addprefix $(CLIENT_FILES), $(addsuffix .js, $(foreach file, $(patsubst %.strings,%-,$(EXPORTS)), $(foreach lang, $(SAVE_LANGS), $(file)$(lang)))))
 SAFE_CPS = $(subst -,_,$(CPS_IN))
@@ -67,7 +69,7 @@ CPS = $(addprefix ../int/strings/charset/,$(addsuffix .dat,$(SAFE_CPS)))
 CPS_TXT = $(addprefix ./charset/,$(addsuffix .txt,$(SAFE_CPS)))
 CHARSET_DB = $(LOCALES_DIR)/charset.db
 
-get-locale=$(subst _,-,$(word 1,$(subst /, ,$1)))
+get-locale=$(subst _,-,$(word 3,$(subst /, ,$1)))
 get-locale-2=$(subst _,-,$(word 5,$(subst /, ,$1)))
 
 all: $(DEFINES_FILE) $(LNGS) $(EXPORTED) $(CHARSET_DB)
@@ -75,7 +77,7 @@ all: $(DEFINES_FILE) $(LNGS) $(EXPORTED) $(CHARSET_DB)
 help:
 	$(Q)$(ECHO) -e "Targets are:\n    all\n    clean\n    help\n    update - extract new strings and distribute them\n    msgs - compile .mo files\n    check - test unused and duplicate strings"
 
-update: site_strings.pot $(POS)
+update: $(POT_FILE) $(POS)
 
 check:
 	@python ./code/duplicates.py
@@ -99,10 +101,10 @@ $(DEFINES_FILE): $(INPUT_FILE)
 	@python ./code/duplicates.py
 	@python ./code/unused.py
 
-site_strings.pot: $(INPUT_FILE)
+$(POT_FILE): $(INPUT_FILE)
 	$(Q)$(ECHO) "[LANG]" $@
 	$(Q)$(MKDIR) $(LOCALES_DIR)
-	$(Q)$(EXTRACT) $(INPUT_FILE) site_strings.pot
+	$(Q)$(EXTRACT) $(INPUT_FILE) $(POT_FILE)
 
 %.mo: %.po
 	$(Q)$(ECHO) "[ MO ]" $(call get-locale,$@)
@@ -112,7 +114,7 @@ site_strings.pot: $(INPUT_FILE)
 $(LNGS): $(MOS)
 	$(Q)$(ECHO) "[LANG]" $(call get-locale-2,$@)
 	$(Q)$(MKDIR) $(dir $@)
-	$(Q)$(DEPLOY) $(INPUT_FILE) $(subst -,_,$(call get-locale-2,$@))/site_strings.mo $@ $(call get-locale-2,$@)
+	$(Q)$(DEPLOY) $(INPUT_FILE) $(TRANSLATE)$(subst -,_,$(call get-locale-2,$@))/site_strings.mo $@ $(call get-locale-2,$@)
 
 init-command=$(MSGINIT) $2 $(subst _,-,$(subst /site_strings.po,,$1)) > $1
 merge-command=$(MSGMERGE) -o $1 $1 $2 2>/dev/null
@@ -121,7 +123,7 @@ $(EXPORTED): $(LNGS) $(EXPORT_INPUT)
 	$(Q)$(MKDIR) $(dir $@)
 	$(Q)$(EXPORT) $(INPUT_FILE) site_strings.mo $@
 
-$(POS): site_strings.pot
+$(POS): $(POT_FILE)
 	$(Q)$(ECHO) $(if $(wildcard $@),"[LANG]","[NEW ]") $(call get-locale,$@)
 	$(Q)$(MKDIR) $(dir $@)
 	$(Q)$(if $(wildcard $@),$(call merge-command,$@,$<),$(call init-command,$@,$<))

@@ -16,9 +16,9 @@ def main():
     keys = strings.keys()
     keys.sort()
 
-    gtt = locales.openGTTFile("./"+iso+"/"+sys.argv[2])
+    gtt = locales.openGTTFile("../translate/"+iso+"/"+sys.argv[2])
 
-    f = open("../platforms/"+path+".strings", "r")
+    f = open("../translate/"+path+".strings", "r")
     o = open(sys.argv[3], "w")
     o.write("""/*
  * Copyright (C) 2013 midnightBITS
