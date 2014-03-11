@@ -1,5 +1,5 @@
-LANGS=pl en
 TRANSLATE=../translate/
+include $(TRANSLATE)/*.mak
 DEFINES_FILE=../libenv/includes/site_strings.h
 INPUT_FILE=$(TRANSLATE)site_strings.txt
 POT_FILE=$(TRANSLATE)site_strings.pot
@@ -68,11 +68,14 @@ SAFE_CPS = $(subst -,_,$(CPS_IN))
 CPS = $(addprefix ../int/strings/charset/,$(addsuffix .dat,$(SAFE_CPS)))
 CPS_TXT = $(addprefix ./charset/,$(addsuffix .txt,$(SAFE_CPS)))
 CHARSET_DB = $(LOCALES_DIR)/charset.db
+MAIL_SET = $(foreach lang, $(SAVE_LANGS), $(foreach mail, $(MAIL), $(lang)/$(mail)))
+MAIL_IN = $(addprefix $(TRANSLATE), $(MAIL_SET))
+MAIL_OUT = $(addprefix $(LOCALES_DIR)/, $(MAIL_SET))
 
 get-locale=$(subst _,-,$(word 3,$(subst /, ,$1)))
 get-locale-2=$(subst _,-,$(word 5,$(subst /, ,$1)))
 
-all: $(DEFINES_FILE) $(LNGS) $(EXPORTED) $(CHARSET_DB)
+all: $(DEFINES_FILE) $(LNGS) $(EXPORTED) $(MAIL_OUT) $(CHARSET_DB)
 
 help:
 	$(Q)$(ECHO) -e "Targets are:\n    all\n    clean\n    help\n    update - extract new strings and distribute them\n    msgs - compile .mo files\n    check - test unused and duplicate strings"
@@ -88,6 +91,7 @@ clean:
 	$(Q)$(RM) $(LNGS)
 	$(Q)$(RM) $(DEFINES_FILE)
 	$(Q)$(RM) $(EXPORTED)
+	$(Q)$(RM) $(MAIL_OUT)
 	$(Q)$(RM) $(CHARSET_DB) $(CPS)
 
 msgs: $(MOS)
@@ -137,4 +141,8 @@ $(CHARSET_DB): ./charset/aliases.txt $(CPS)
 	$(Q)$(ECHO) "[ CH ]" $(subst _,-,$(*F))
 	$(Q)$(MKDIR) $(dir $@)
 	$(Q)$(CPS_PY) $< $@ 
+
+$(MAIL_OUT): $(MAIL_IN)
+	$(Q)$(ECHO) "[ CP ]" $(patsubst $(LOCALES_DIR)/%,%,$@)
+	$(Q)$(CP) $(patsubst $(LOCALES_DIR)/%,$(TRANSLATE)%,$@) $@ 
 
