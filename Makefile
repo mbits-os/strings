@@ -1,6 +1,5 @@
 TRANSLATE=../translate/
 include $(TRANSLATE)/*.mak
-DEFINES_FILE=../libenv/includes/site_strings.h
 INPUT_FILE=$(TRANSLATE)site_strings.txt
 POT_FILE=$(TRANSLATE)site_strings.pot
 CLIENT_FILES=../httpd/www/code/lang/

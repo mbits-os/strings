@@ -2,7 +2,7 @@
 
 import os, re
 
-dirs = ["../libenv", "../server"]
+dirs = ["../apps/dbtool", "../apps/reedr"]
 
 patt = re.compile("(lng::LNG_[A-Z0-9_]+)")
 strings = ["LANGUAGE_NAME"] # mark as used
